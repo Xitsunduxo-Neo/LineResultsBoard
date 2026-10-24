@@ -1,0 +1,84 @@
+﻿@model LineResultsBoard.Models.LineBoardViewModel
+<style>
+    .board{border:2px solid #000; font-family:Arial; font-size:13px; background:white;}
+    .header-black{background:#222; color:white; text-align:center; padding:8px; font-weight:bold; font-size:16px;}
+    .purple{background:#a0205e; color:white; text-align:center; font-weight:bold;}
+    table{width:100%; border-collapse:collapse;}
+    td,th{border:1px solid #000; padding:4px;}
+    input{width:100%; border:none; text-align:center; font-weight:bold;}
+    input.comment{ text-align:left; }
+    .clickable:hover{ background:#ffffcc; cursor:pointer; }
+    .sep{ border-top:3px dashed #a0205e; }
+    .side-box{ background:#eee; font-weight:bold; text-align:center; padding:10px; }
+</style>
+
+<div class="board">
+    <div class="header-black">LINE RESULTS BOARD - Date: <input type="date" asp-for="Date" style="width:130px; color:black;" /> </div>
+
+    <!-- TOP RISKS like photo -->
+    <table>
+        <tr><th></th><th>Risks</th><th>Descriptions</th><th>Results</th><th>Comments,Actions</th></tr>
+        <tr><td>Safety</td><td><input type="checkbox" asp-for="SafetyRisk" /></td><td><input asp-for="SafetyDescription" /></td><td><input type="checkbox" /></td><td><input asp-for="SafetyComments" /></td></tr>
+        <tr><td>Quality</td><td><input type="checkbox" asp-for="QualityRisk" /></td><td><input asp-for="QualityDescription" /></td><td><input type="checkbox" /></td><td><input asp-for="QualityComments" /></td></tr>
+    </table>
+
+    <form method="post" asp-action="Save">
+        <table>
+            <tr class="purple"><td>Shift Summary</td><td>Hour</td><td>Target</td><td>Result</td><td>Difference</td><td>Comments</td></tr>
+
+            <!-- DAY SHIFT -->
+            <tr>
+                <td rowspan="13" class="side-box">Lead Operator<br /><input asp-for="DayLeadOperator" /><br /><br />Shift Target<br />805<br /><br />Shift Result<br /><input value="828" style="color:red;" /></td>
+                @* first row handled below *@
+            </tr>
+            @for (int i = 0; i < Model.DayShift.Count; i++)
+            {
+                <tr class="@(i == 0 ? "" : "") clickable">
+                    <td><input asp-for="DayShift[i].Hour" readonly /></td>
+                    <td><input asp-for="DayShift[i].Target" class="target" /></td>
+                    <td><input asp-for="DayShift[i].Actual" class="actual" /></td>
+                    <td><input value="@Model.DayShift[i].Difference" readonly class="diff" /></td>
+                    <td><input asp-for="DayShift[i].Comments" class="comment" /></td>
+                </tr>
+            }
+
+            <tr class="sep"><td colspan="6" style="border:none; border-top:3px dashed red;"></td></tr>
+
+            <!-- NIGHT SHIFT -->
+            @for (int i = 0; i < Model.NightShift.Count; i++)
+            {
+                <tr class="clickable">
+                    @if (i == 0)
+                    {
+                        <td rowspan="13" class="side-box">Lead Operator<br /><input asp-for="NightLeadOperator" /><br /><br />Shift Target<br />805<br /><br />Shift Result<br /><input value="767" style="color:red;" /></td>
+                    }
+                    <td><input asp-for="NightShift[i].Hour" readonly /></td>
+                    <td><input asp-for="NightShift[i].Target" class="target" /></td>
+                    <td><input asp-for="NightShift[i].Actual" class="actual" /></td>
+                    <td><input value="@Model.NightShift[i].Difference" readonly class="diff" /></td>
+                    <td><input asp-for="NightShift[i].Comments" class="comment" /></td>
+                </tr>
+            }
+        </table>
+
+        <!-- BOTTOM 24h -->
+        <table>
+            <tr class="purple"><td>24h Target</td><td>24h Result</td><td>24h Difference</td><td colspan="3">Planned Events</td><td>Target/Actual</td><td>Comments</td></tr>
+            <tr><td><input asp-for="Total24hTarget" /></td><td><input asp-for="Total24hResult" /></td><td><input asp-for="Total24hDiff" /></td><td colspan="3"><input asp-for="PlannedEvent" /></td><td><input value="30 / 20" /></td><td><input /></td></tr>
+        </table>
+
+        <button type="submit" class="btn btn-primary" style="margin:10px; padding:10px 20px;">💾 Save Board</button>
+    </form>
+</div>
+
+<script>
+    // Auto calculate Difference when leader types Result
+    document.querySelectorAll('.actual').forEach(inp=>{
+     inp.addEventListener('input', e=>{
+      let row=e.target.closest('tr');
+      let target=parseInt(row.querySelector('.target').value)||0;
+      let actual=parseInt(e.target.value)||0;
+      row.querySelector('.diff').value=actual-target;
+     });
+    });
+</script>
